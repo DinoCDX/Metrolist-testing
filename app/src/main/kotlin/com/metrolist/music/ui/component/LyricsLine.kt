@@ -730,7 +730,7 @@ private fun WordLevelLyrics(
                             val maxGrowth = 0.20f
                             val rate = 0.002f    // high rate = faster
                             
-                            holdScale = maxGrowth * (1f - exp(-rate * timeActiveMs))
+                            holdScale = maxGrowth * (1f - exp(-rate * timeActiveMs)).toFloat()
                         }
                     }
 
