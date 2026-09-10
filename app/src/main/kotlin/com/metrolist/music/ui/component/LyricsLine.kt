@@ -720,8 +720,22 @@ private fun WordLevelLyrics(
                         nudgeStrength * sin(charLp * PI.toFloat()) * exp(-3f * charLp)
                     } else 0f
                     
-                    val charScaleX = 1f + wobbleX + crescendoDeltaX + nudgeScale * 0.3f
-                    val charScaleY = 1f + wobbleY + crescendoDeltaY + nudgeScale
+                    // enlarge word on word hold
+                    var holdScale = 0f
+                    if (wordItem != null && !isWordSung && sungFactor > 0f) {
+                        val durMs = (wordItem.endTime - wordItem.startTime) * 1000f
+
+                        if (durMs > 400f) {
+                            val timeActiveMs = sungFactor * durMs
+                            val maxGrowth = 0.20f
+                            val rate = 0.002f    // high rate = faster
+                            
+                            holdScale = maxGrowth * (1f - exp(-rate * timeActiveMs))
+                        }
+                    }
+
+                    val charScaleX = 1f + wobbleX + crescendoDeltaX + nudgeScale * 0.3f + holdScale
+                    val charScaleY = 1f + wobbleY + crescendoDeltaY + nudgeScale + holdScale
 
                     withTransform({
                         var waveOffset = 0f
