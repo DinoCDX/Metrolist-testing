@@ -744,7 +744,7 @@ private fun WordLevelLyrics(
                                     val peakScale = maxGrowth * (1f - exp(-rate * durMs)).toFloat()
                                     val shrinkProgress = timeSinceEndMs / shrinkDurationMs
                                     
-                                    holdScale = peakScale * (1f - shrinkProgress)
+                                    holdScale = peakScale * (1f - shrinkProgress).toFloat()
                                 }
                             }
                         }
