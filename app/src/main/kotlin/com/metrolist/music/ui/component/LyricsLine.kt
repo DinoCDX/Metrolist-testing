@@ -722,15 +722,31 @@ private fun WordLevelLyrics(
                     
                     // enlarge word on word hold
                     var holdScale = 0f
-                    if (wordItem != null && !isWordSung && sungFactor > 0f) {
+                    if (wordItem != null && sungFactor > 0f) {
                         val durMs = (wordItem.endTime - wordItem.startTime) * 1000f
 
                         if (durMs > 400f) {
-                            val timeActiveMs = sungFactor * durMs
-                            val maxGrowth = 0.20f
-                            val rate = 0.002f    // high rate = faster
+                            val wordLen = wordItem.text.length.coerceAtLeast(3).toFloat()
                             
-                            holdScale = maxGrowth * (1f - exp(-rate * timeActiveMs))
+                            // different size for smaller and longer words
+                            val maxGrowth = 0.25f * (3f / wordLen) 
+                            val rate = 0.002f * (3f / wordLen)
+
+                            val timeSinceEndMs = (smoothPosition - (wordItem.endTime * 1000.0)).toFloat()
+
+                            if (!isWordSung) {
+                                val timeActiveMs = sungFactor * durMs
+                                holdScale = maxGrowth * (1f - exp(-rate * timeActiveMs)).toFloat()
+                            } else if (timeSinceEndMs > 0f) {
+                                val shrinkDurationMs = durMs / 5f
+                                
+                                if (timeSinceEndMs < shrinkDurationMs) {
+                                    val peakScale = maxGrowth * (1f - exp(-rate * durMs)).toFloat()
+                                    val shrinkProgress = timeSinceEndMs / shrinkDurationMs
+                                    
+                                    holdScale = peakScale * (1f - shrinkProgress)
+                                }
+                            }
                         }
                     }
 
