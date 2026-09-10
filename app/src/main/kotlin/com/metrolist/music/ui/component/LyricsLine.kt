@@ -725,12 +725,12 @@ private fun WordLevelLyrics(
                     if (wordItem != null && !isWordSung && sungFactor > 0f) {
                         val durMs = (wordItem.endTime - wordItem.startTime) * 1000f
 
-                        if (durMs > 200f) {
+                        if (durMs > 400f) {
                             val timeActiveMs = sungFactor * durMs
-                            val maxGrowth = 0.30f
+                            val maxGrowth = 0.20f
                             val rate = 0.002f    // high rate = faster
                             
-                            holdScale = maxGrowth * (1f - exp(-rate * timeActiveMs)).toFloat()
+                            holdScale = maxGrowth * (1f - exp(-rate * timeActiveMs))
                         }
                     }
 
