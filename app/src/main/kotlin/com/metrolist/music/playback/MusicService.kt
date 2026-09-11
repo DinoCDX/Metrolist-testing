@@ -417,6 +417,11 @@ class MusicService :
     val playerFlow = _playerFlow.asStateFlow()
 
     private val playerSilenceProcessors = HashMap<Player, SilenceDetectorAudioProcessor>()
+    
+    private val playerLoudnessProcessors = HashMap<Player, LoudnessAudioProcessor>()
+    
+    val currentLoudness: Float
+        get() = playerLoudnessProcessors[player]?.currentLevel ?: 0f
 
     private val instantSilenceSkipEnabled = MutableStateFlow(false)
 
@@ -1280,7 +1285,7 @@ class MusicService :
     private fun createExoPlayer(prefs: Preferences? = null): ExoPlayer {
         val normalizationProcessor = VolumeNormalizationAudioProcessor()
         val eqProcessor = CustomEqualizerAudioProcessor()
-
+        val loudnessProcessor = LoudnessAudioProcessor()
         val silenceProcessor = SilenceDetectorAudioProcessor { handleLongSilenceDetected() }
 
         // Set initial state — use pre-read prefs when available, otherwise fall back to DataStore
@@ -1305,7 +1310,7 @@ class MusicService :
                 .setMediaSourceFactory(
                     createMediaSourceFactory(normalizationProcessor) { createdPlayer },
                 )
-                .setRenderersFactory(createRenderersFactory(normalizationProcessor, eqProcessor, silenceProcessor, useAudioTrackPlaybackParams))
+                .setRenderersFactory(createRenderersFactory(normalizationProcessor, eqProcessor, loudnessProcessor, silenceProcessor, useAudioTrackPlaybackParams))
                 .setLoadControl(
                     // Start playback once ~750ms is buffered (media3's default is 1000ms) so first
                     // audio is audible a touch sooner. min/max/after-rebuffer match the media3 1.x
@@ -1331,6 +1336,7 @@ class MusicService :
         createdPlayer = player
 
         playerNormalizationProcessors[player] = normalizationProcessor
+        playerLoudnessProcessors[player] = loudnessProcessor
         playerSilenceProcessors[player] = silenceProcessor
         playerEqualizerProcessors[player] = eqProcessor
         equalizerService.addAudioProcessor(eqProcessor)
@@ -3960,6 +3966,7 @@ class MusicService :
     private fun createRenderersFactory(
         normalizationProcessor: VolumeNormalizationAudioProcessor,
         eqProcessor: CustomEqualizerAudioProcessor,
+        loudnessProcessor: LoudnessAudioProcessor,
         silenceProcessor: SilenceDetectorAudioProcessor,
         useAudioTrackPlaybackParams: Boolean,
     ) = object : DefaultRenderersFactory(this) {
@@ -4020,6 +4027,7 @@ class MusicService :
                     arrayOf(
                         normalizationProcessor,
                         eqProcessor,
+                        loudnessProcessor,
                         silenceProcessor,
                     ),
                     SilenceSkippingAudioProcessor(2_000_000, 20_000, 256),
@@ -4961,6 +4969,7 @@ class MusicService :
 
     private fun releaseExoPlayer(player: ExoPlayer) {
         playerNormalizationProcessors.remove(player)
+        playerLoudnessProcessors.remove(player)
         playerSilenceProcessors.remove(player)
         playerEqualizerProcessors.remove(player)?.let(equalizerService::removeAudioProcessor)
         player.release()
