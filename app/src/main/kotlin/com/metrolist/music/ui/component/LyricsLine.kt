@@ -785,13 +785,13 @@ private fun WordLevelLyrics(
                             }
                             if (chromaIntensity > 0f) {
                                 val fringeOffset = chromaIntensity * 4f
-                                drawText(
+                                this.drawText(
                                     letterLayouts[i],
                                     color = Color.Red.copy(alpha = 0.55f * chromaIntensity),
                                     topLeft = Offset(-fringeOffset, 0f),
                                     blendMode = BlendMode.Plus,
                                 )
-                                drawText(
+                                this.drawText(
                                     letterLayouts[i],
                                     color = Color.Blue.copy(alpha = 0.55f * chromaIntensity),
                                     topLeft = Offset(fringeOffset, 0f),
