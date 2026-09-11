@@ -56,23 +56,25 @@ class LoudnessAudioProcessor(
         if (frameCount == 0) return
         val basePosition = inputBuffer.position()
 
-        var peak = 0
+        var sumSquares = 0.0
         repeat(frameCount) { frameIndex ->
             repeat(channelCount) { channelIndex ->
                 val sampleIndex = basePosition + (frameIndex * channelCount + channelIndex) * 2
-                val sampleValue = abs(inputBuffer.getShort(sampleIndex).toInt())
-                if (sampleValue > peak) peak = sampleValue
+                val sample = inputBuffer.getShort(sampleIndex).toInt()
+                sumSquares += sample.toDouble() * sample
             }
         }
 
-        val normalizedPeak = (peak / 32767f).coerceIn(0f, 1f)
-        // Fast attack, slow release so short loud hits still register visibly.
-        currentLevel = if (normalizedPeak > currentLevel) {
-            currentLevel + (normalizedPeak - currentLevel) * attackCoeff
-        } else {
-            currentLevel + (normalizedPeak - currentLevel) * releaseCoeff
-        }
+    val rms = sqrt(sumSquares / (frameCount * channelCount)) / 32767.0
+    val normalizedLevel = rms.toFloat().coerceIn(0f, 1f)
+
+    // Fast attack, slow release so short loud passages still register visibly.
+    currentLevel = if (normalizedLevel > currentLevel) {
+        currentLevel + (normalizedLevel - currentLevel) * attackCoeff
+    } else {
+        currentLevel + (normalizedLevel - currentLevel) * releaseCoeff
     }
+}
 
     override fun queueEndOfStream() {
         inputEnded = true
