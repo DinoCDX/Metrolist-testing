@@ -5,7 +5,7 @@ import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.util.UnstableApi
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import kotlin.math.abs
+import kotlin.math.sqrt
 
 @UnstableApi
 class LoudnessAudioProcessor(
