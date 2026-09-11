@@ -33,6 +33,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -71,6 +72,7 @@ import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.sin
 import kotlin.math.PI
+import kotlin.random.Random
 
 private data class HyphenGroupWord(
     val pos: Int,
@@ -341,6 +343,7 @@ private fun WordLevelLyrics(
     }
     
     var smoothPosition by remember { mutableLongStateOf(currentPositionState + lyricsOffset) }
+    var loudness by remember { mutableFloatStateOf(0f) }
     
     LaunchedEffect(isActiveLine) {
         if (isActiveLine) {
@@ -356,6 +359,7 @@ private fun WordLevelLyrics(
                     }
                     val elapsed = now - lastUpdateTime
                     smoothPosition = lastPlayerPos + lyricsOffset + (if (playerConnection.player.isPlaying) elapsed else 0)
+                    loudness = playerConnection.service.currentLoudness
                 }
             }
         }
@@ -749,6 +753,14 @@ private fun WordLevelLyrics(
                             }
                         }
                     }
+                    
+                    val loudnessThreshold = 0.5f
+                    val shakeIntensity = if (loudness > loudnessThreshold) {
+                        ((loudness - loudnessThreshold) / (1f - loudnessThreshold)).coerceIn(0f, 1f)
+                    } else 0f
+                    
+                    val shakeX = if (shakeIntensity > 0f) (Random.nextFloat() - 0.5f) * shakeIntensity * 6f else 0f
+                    val shakeY = if (shakeIntensity > 0f) (Random.nextFloat() - 0.5f) * shakeIntensity * 4f else 0f
 
                     val charScaleX = 1f + wobbleX + crescendoDeltaX + nudgeScale * 0.3f + holdScale
                     val charScaleY = 1f + wobbleY + crescendoDeltaY + nudgeScale + holdScale
@@ -769,7 +781,7 @@ private fun WordLevelLyrics(
                             }
                         }
 
-                        translate(left = alignShift + lineCurrentPushes[lineIdx] + charBounds.left, top = charBounds.top + waveOffset)
+                        translate(left = alignShift + lineCurrentPushes[lineIdx] + charBounds.left + shakeX, top = charBounds.top + waveOffset + shakeY)
                         if (wordIdx != -1) {
                             scale(
                                 charScaleX,
