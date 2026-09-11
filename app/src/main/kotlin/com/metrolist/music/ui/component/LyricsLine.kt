@@ -49,6 +49,7 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.PlatformTextStyle
@@ -754,13 +755,16 @@ private fun WordLevelLyrics(
                         }
                     }
                     
+                    // word shake on loudness (wip)
                     val loudnessThreshold = 0.5f
-                    val shakeIntensity = if (loudness > loudnessThreshold) {
+                    val shakeIntensity = if (wordItem != null && sungFactor > 0f && !isWordSung && loudness > loudnessThreshold) {
                         ((loudness - loudnessThreshold) / (1f - loudnessThreshold)).coerceIn(0f, 1f)
                     } else 0f
                     
                     val shakeX = if (shakeIntensity > 0f) (Random.nextFloat() - 0.5f) * shakeIntensity * 6f else 0f
                     val shakeY = if (shakeIntensity > 0f) (Random.nextFloat() - 0.5f) * shakeIntensity * 4f else 0f
+                    
+                    val chromaIntensity = if (holdScale > 0.02f) shakeIntensity else 0f
 
                     val charScaleX = 1f + wobbleX + crescendoDeltaX + nudgeScale * 0.3f + holdScale
                     val charScaleY = 1f + wobbleY + crescendoDeltaY + nudgeScale + holdScale
@@ -778,6 +782,21 @@ private fun WordLevelLyrics(
                                 val waveHeight = 3.24f
                                 val phaseOffset = i * 0.4f
                                 waveOffset = sin(wallTime * waveSpeed + phaseOffset) * waveHeight * waveFade
+                            }
+                            if (chromaIntensity > 0f) {
+                                val fringeOffset = chromaIntensity * 4f
+                                drawText(
+                                    letterLayouts[i],
+                                    color = Color.Red.copy(alpha = 0.55f * chromaIntensity),
+                                    topLeft = Offset(-fringeOffset, 0f),
+                                    blendMode = BlendMode.Plus,
+                                )
+                                drawText(
+                                    letterLayouts[i],
+                                    color = Color.Blue.copy(alpha = 0.55f * chromaIntensity),
+                                    topLeft = Offset(fringeOffset, 0f),
+                                    blendMode = BlendMode.Plus,
+                                )
                             }
                         }
 
