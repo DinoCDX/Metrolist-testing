@@ -783,15 +783,18 @@ private fun WordLevelLyrics(
                                 val phaseOffset = i * 0.4f
                                 waveOffset = sin(wallTime * waveSpeed + phaseOffset) * waveHeight * waveFade
                             }
+                            val baseAlpha = if (isWordSung || charLp > 0.99f) 1f else (focusedAlpha + (1f - focusedAlpha) * sungFactor)
+                            drawText(letterLayouts[i], color = expressiveAccent.copy(alpha = if (wordIdx == -1) focusedAlpha else baseAlpha))
+                            
                             if (chromaIntensity > 0f) {
                                 val fringeOffset = chromaIntensity * 4f
-                                this.drawText(
+                                drawText(
                                     letterLayouts[i],
                                     color = Color.Red.copy(alpha = 0.55f * chromaIntensity),
                                     topLeft = Offset(-fringeOffset, 0f),
                                     blendMode = BlendMode.Plus,
                                 )
-                                this.drawText(
+                                drawText(
                                     letterLayouts[i],
                                     color = Color.Blue.copy(alpha = 0.55f * chromaIntensity),
                                     topLeft = Offset(fringeOffset, 0f),
